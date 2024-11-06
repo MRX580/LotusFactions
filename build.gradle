@@ -1,0 +1,79 @@
+plugins {
+    id 'java'
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+}
+
+group = 'org.degree'
+version = '1.0-NOTRELEASED'
+description = 'Plugin for factions'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "spigotmc-repo"
+        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
+    maven {
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/groups/public/"
+    }
+}
+
+dependencies {
+    compileOnly "org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT"
+    implementation 'org.ow2.asm:asm:9.5'
+    shadow 'org.ow2.asm:asm:9.5'
+    implementation 'org.json:json:20210307'
+    implementation 'javax.servlet:javax.servlet-api:4.0.1'
+    implementation 'org.eclipse.jetty:jetty-server:9.4.43.v20210629'
+    implementation 'org.eclipse.jetty:jetty-servlet:9.4.43.v20210629'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release.set(17)
+}
+
+tasks.register('copyWebResources', Copy) {
+    from 'src/main/resources/web'
+    into "$buildDir/resources/main/web"
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+
+    filesMatching('plugin.yml') {
+        expand props
+    }
+
+    // Копирование веб-ресурсов
+    from('src/main/resources/web') {
+        into('web')
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+
+
+shadowJar {
+    archiveFileName = 'Faction-1.0-NOTRELEASED.jar'
+    relocate 'org.eclipse.jetty', 'org.degree.faction.lib.jetty'
+
+    manifest {
+        attributes(
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Author': 'Degree',
+                'Description': project.description
+        )
+    }
+}

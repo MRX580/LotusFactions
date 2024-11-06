@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylish Sidebar Navigation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .sidebar {
+            width: 250px;
+            height: 100%;
+            background-color: #2c3e50;
+            box-shadow: 3px 0 15px rgba(0, 0, 0, 0.3);
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #ecf0f1;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #34495e;
+            color: #ffffff;
+        }
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            width: calc(100% - 250px);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #666;
+        }
+        .faction-info {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+        .last-online {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        #memberChart {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <a href="#home">Home</a>
+    <a href="#about">About</a>
+    <a href="#services">Services</a>
+    <a href="#contact">Contact</a>
+</div>
+<div class="content">
+    <h1>Welcome to My Minecraft Plugin</h1>
+    <div class="faction-info">
+        <h2>Faction Name: <span id="faction-name">The Guardians</span></h2>
+        <p>Number of Members: <span id="member-count">25</span></p>
+    </div>
+    <div class="chart-container">
+        <h2>Member Count Over Time</h2>
+        <canvas id="memberChart"></canvas>
+    </div>
+    <div class="last-online">
+        <h2>Last Online Members</h2>
+        <ul id="last-online-list">
+            <li>Player1 - Last Online: 2024-11-06 15:30</li>
+            <li>Player2 - Last Online: 2024-11-06 14:00</li>
+            <li>Player3 - Last Online: 2024-11-06 13:45</li>
+        </ul>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Placeholder JavaScript to initialize the chart
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('memberChart').getContext('2d');
+        const memberChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+                datasets: [{
+                    label: 'Number of Members',
+                    data: [10, 15, 20, 25, 30, 25],
+                    borderColor: 'rgba(46, 204, 113, 1)',
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+name: Faction
+version: '${version}'
+main: org.degree.faction.Faction
+api-version: '1.21'
+commands:
+  faction:
+    description: Main command for faction management.
+    usage: /faction
+    permission-message: You do not have permission to use this command.
