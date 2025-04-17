@@ -1,12 +1,11 @@
-package org.degree.faction.database;
+package org.degree.factions.database;
 
-import org.degree.faction.Faction;
+import org.degree.factions.Factions;
 
 import java.io.File;
 import java.sql.*;
 
 public class Database {
-
     private Connection connection;
 
     public Database() {
@@ -15,20 +14,14 @@ public class Database {
 
     private void setupConnection() {
         try {
-            // Получаем путь к базе данных
-            String databasePath = Faction.getInstance().getDataFolder() + "/factions.db";
+            String databasePath = Factions.getInstance().getDataFolder() + "/factions.db";
+            File pluginDir = Factions.getInstance().getDataFolder();
+            if (!pluginDir.exists()) pluginDir.mkdirs();
 
-            // Убедитесь, что директория плагина существует
-            File pluginDir = Faction.getInstance().getDataFolder();
-            if (!pluginDir.exists()) {
-                pluginDir.mkdirs();  // Создаем директорию, если её нет
-            }
-
-            // Подключение к базе данных
             connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath);
 
-            // Создание таблиц, если их ещё нет
             try (Statement stmt = connection.createStatement()) {
+                // Существующие таблицы
                 stmt.execute("CREATE TABLE IF NOT EXISTS factions (" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "name TEXT NOT NULL UNIQUE," +
@@ -53,34 +46,46 @@ public class Database {
                         "expiry_date TIMESTAMP NOT NULL," +
                         "PRIMARY KEY(invitee_uuid, faction_name)" +
                         ");");
+
+                // Новая таблица для сессий
+                stmt.execute("CREATE TABLE IF NOT EXISTS faction_sessions (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "faction_name TEXT NOT NULL," +
+                        "player_uuid TEXT NOT NULL," +
+                        "login_time TIMESTAMP NOT NULL," +
+                        "logout_time TIMESTAMP" +
+                        ");");
             }
 
-            Faction.getInstance().getLogger().info("SQLite database setup completed.");
-
+            Factions.getInstance().getLogger().info("SQLite database setup completed.");
         } catch (SQLException e) {
-            Faction.getInstance().getLogger().severe("Could not set up SQLite database: " + e.getMessage());
+            Factions.getInstance().getLogger().severe("Could not set up SQLite database: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public Connection getConnection() {
+    public synchronized Connection getConnection() {
+        try {
+            if (connection == null || connection.isClosed()) {
+                setupConnection();
+            }
+        } catch (SQLException e) {
+            Factions.getInstance().getLogger().severe("Error checking DB connection: " + e.getMessage());
+        }
         return connection;
     }
 
     public PreparedStatement prepareStatement(String sql) throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            setupConnection(); // Восстанавливаем подключение, если оно закрыто
-        }
-        return connection.prepareStatement(sql);
+        return getConnection().prepareStatement(sql);
     }
 
     public void closeConnection() {
         if (connection != null) {
             try {
                 connection.close();
-                Faction.getInstance().getLogger().info("Database connection closed.");
+                Factions.getInstance().getLogger().info("Database connection closed.");
             } catch (SQLException e) {
-                Faction.getInstance().getLogger().severe("Error while closing database connection: " + e.getMessage());
+                Factions.getInstance().getLogger().severe("Error while closing database connection: " + e.getMessage());
                 e.printStackTrace();
             }
         }

@@ -1,9 +1,9 @@
-package org.degree.faction.commands.faction;
+package org.degree.factions.commands.faction;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.degree.faction.commands.AbstractCommand;
-import org.degree.faction.database.FactionDatabase;
+import org.degree.factions.commands.AbstractCommand;
+import org.degree.factions.database.FactionDatabase;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -18,7 +18,7 @@ public class FactionLeaveCommand extends AbstractCommand {
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command.");
+            sender.sendMessage(localization.getMessage("messages.only_players_can_use"));
             return;
         }
 
@@ -26,24 +26,22 @@ public class FactionLeaveCommand extends AbstractCommand {
         String playerUUID = player.getUniqueId().toString();
 
         try {
-            // Проверяем, является ли игрок лидером
             if (factionDatabase.isLeader(playerUUID)) {
-                player.sendMessage("You cannot leave the faction because you are the leader. Transfer leadership or disband the faction first.");
+                localization.sendMessageToPlayer(player, "messages.cannot_leave_as_leader");
                 return;
             }
 
-            // Удаляем игрока из фракции
             factionDatabase.removeMemberFromFaction(playerUUID);
-            player.sendMessage("You have successfully left the faction.");
+            localization.sendMessageToPlayer(player, "messages.faction_left_successfully");
 
         } catch (SQLException e) {
-            player.sendMessage("An error occurred while leaving the faction.");
+            localization.sendMessageToPlayer(player, "messages.error_leaving_faction");
             e.printStackTrace();
         }
     }
 
     @Override
     public List<String> complete(CommandSender sender, String[] args) {
-        return Collections.emptyList(); // Нет автодополнения для этой команды
+        return Collections.emptyList();
     }
 }

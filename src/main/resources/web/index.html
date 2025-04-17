@@ -3,127 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stylish Sidebar Navigation</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            background-color: #f0f0f0;
-        }
-        .sidebar {
-            width: 250px;
-            height: 100%;
-            background-color: #2c3e50;
-            box-shadow: 3px 0 15px rgba(0, 0, 0, 0.3);
-            position: fixed;
-            display: flex;
-            flex-direction: column;
-            padding-top: 20px;
-        }
-        .sidebar a {
-            padding: 15px 20px;
-            text-decoration: none;
-            font-size: 18px;
-            color: #ecf0f1;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .sidebar a:hover {
-            background-color: #34495e;
-            color: #ffffff;
-        }
-        .content {
-            margin-left: 250px;
-            padding: 20px;
-            width: calc(100% - 250px);
-        }
-        h1 {
-            color: #333;
-        }
-        p {
-            color: #666;
-        }
-        .faction-info {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-        }
-        .chart-container {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-        }
-        .last-online {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        #memberChart {
-            width: 100% !important;
-            height: 100% !important;
-        }
-    </style>
+    <title>Faction Statistics Dashboard</title>
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Ваши кастомные стили -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-<div class="sidebar">
-    <a href="#home">Home</a>
-    <a href="#about">About</a>
-    <a href="#services">Services</a>
-    <a href="#contact">Contact</a>
-</div>
-<div class="content">
-    <h1>Welcome to My Minecraft Plugin</h1>
-    <div class="faction-info">
-        <h2>Faction Name: <span id="faction-name">The Guardians</span></h2>
-        <p>Number of Members: <span id="member-count">25</span></p>
+<body class="bg-gray-100 font-sans antialiased overflow-x-hidden">
+<!-- Сайдбар -->
+<aside class="fixed inset-y-0 left-0 w-64 bg-gray-800 shadow-lg flex flex-col">
+    <div class="p-6">
+        <h1 class="text-white text-2xl font-bold">Factions</h1>
     </div>
-    <div class="chart-container">
-        <h2>Member Count Over Time</h2>
-        <canvas id="memberChart"></canvas>
+    <nav class="flex-grow overflow-y-auto">
+        <a href="#faction-info" class="block px-6 py-3 text-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Faction Info</a>
+        <a href="#member-stats" class="block px-6 py-3 text-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Member Stats</a>
+        <a href="#activity-chart" class="block px-6 py-3 text-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Activity Chart</a>
+        <a href="#last-online" class="block px-6 py-3 text-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">Last Online</a>
+    </nav>
+    <div class="p-6 flex justify-center space-x-4">
+        <a href="https://discord.com" target="_blank">
+            <img src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" class="w-8 h-8" alt="Discord">
+        </a>
+        <a href="https://telegram.org" target="_blank">
+            <img src="https://img.icons8.com/ios-filled/50/ffffff/telegram-app.png" class="w-8 h-8" alt="Telegram">
+        </a>
     </div>
-    <div class="last-online">
-        <h2>Last Online Members</h2>
-        <ul id="last-online-list">
-            <li>Player1 - Last Online: 2024-11-06 15:30</li>
-            <li>Player2 - Last Online: 2024-11-06 14:00</li>
-            <li>Player3 - Last Online: 2024-11-06 13:45</li>
+</aside>
+
+<!-- Основной контент -->
+<div class="pl-64 p-6 max-w-screen-xl mx-auto">
+    <header class="mb-8">
+        <h2 class="text-4xl font-bold text-gray-800">Faction Statistics Dashboard</h2>
+        <p class="mt-2 text-gray-600">Real-time analytics for your faction data</p>
+    </header>
+
+    <!-- Faction Information -->
+    <section id="faction-info" class="mb-8 bg-white rounded-lg shadow p-6 hover:shadow-xl transition-shadow duration-200 animate-fadeIn">
+        <h3 class="text-2xl font-semibold mb-4 border-b pb-2">Faction Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="text-gray-700 font-medium">Faction Name:</p>
+                <p id="factionName" class="text-xl font-bold">-</p>
+            </div>
+            <div>
+                <p class="text-gray-700 font-medium">Faction Leader:</p>
+                <p id="factionLeader" class="text-xl font-bold">-</p>
+            </div>
+            <div>
+                <p class="text-gray-700 font-medium">Total Members:</p>
+                <p id="memberCount" class="text-xl font-bold">-</p>
+            </div>
+            <div>
+                <p class="text-gray-700 font-medium">Created On:</p>
+                <p id="creationDate" class="text-xl font-bold">-</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Member Details -->
+    <section id="member-stats" class="mb-8 bg-white rounded-lg shadow p-6 hover:shadow-xl transition-shadow duration-200 animate-fadeIn">
+        <h3 class="text-2xl font-semibold mb-4 border-b pb-2">Member Details</h3>
+        <ul id="member-list" class="list-disc list-inside space-y-2">
+            <!-- Динамический контент -->
         </ul>
-    </div>
+    </section>
+
+    <!-- Activity Chart -->
+    <section id="activity-chart" class="mb-8 bg-white rounded-lg shadow p-6 hover:shadow-xl transition-shadow duration-200 animate-fadeIn">
+        <h3 class="text-2xl font-semibold mb-4 border-b pb-2">Faction Member Activity Over Time</h3>
+        <canvas id="memberChart" class="w-full" style="height:300px;"></canvas>
+    </section>
+
+    <!-- Last Online Members -->
+    <section id="last-online" class="mb-8 bg-white rounded-lg shadow p-6 hover:shadow-xl transition-shadow duration-200 animate-fadeIn">
+        <h3 class="text-2xl font-semibold mb-4 border-b pb-2">Last Online Members</h3>
+        <ul id="last-online-list" class="list-disc list-inside space-y-2">
+            <!-- Динамический контент -->
+        </ul>
+    </section>
+
+    <!-- Additional Statistics -->
+    <section class="mb-8 bg-white rounded-lg shadow p-6 hover:shadow-xl transition-shadow duration-200 animate-fadeIn">
+        <h3 class="text-2xl font-semibold mb-4 border-b pb-2">Additional Statistics</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <p class="text-gray-700 font-medium">Total Player Joins Today:</p>
+                <p id="joinsToday" class="text-xl font-bold">-</p>
+            </div>
+            <div>
+                <p class="text-gray-700 font-medium">Most Active Member:</p>
+                <p id="mostActiveMember" class="text-xl font-bold">-</p>
+            </div>
+            <div>
+                <p class="text-gray-700 font-medium">Average Online Time per Player:</p>
+                <p id="averageOnlineTime" class="text-xl font-bold">-</p>
+            </div>
+        </div>
+    </section>
 </div>
+
+<!-- Скрипты -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Placeholder JavaScript to initialize the chart
-    document.addEventListener('DOMContentLoaded', function () {
-        const ctx = document.getElementById('memberChart').getContext('2d');
-        const memberChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-                datasets: [{
-                    label: 'Number of Members',
-                    data: [10, 15, 20, 25, 30, 25],
-                    borderColor: 'rgba(46, 204, 113, 1)',
-                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    });
-</script>
+<script src="js/script.js"></script>
 </body>
 </html>

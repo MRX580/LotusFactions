@@ -1,7 +1,6 @@
-package org.degree.faction.web;
+package org.degree.factions.web;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
@@ -9,11 +8,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 
 public class WebResourceManager {
-    private final Path dataFolder;
-
-    public WebResourceManager(Path dataFolder) {
-        this.dataFolder = dataFolder;
-    }
 
     public void copyResources(String resourcePath, Path targetDir) throws IOException {
         if (!resourcePath.startsWith("/")) {

@@ -1,11 +1,17 @@
-package org.degree.faction.commands;
+package org.degree.factions.commands;
 
 import org.bukkit.command.*;
+import org.degree.factions.Factions;
+import org.degree.factions.utils.LocalizationManager;
+
 import java.util.List;
 
 public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
+    protected final LocalizationManager localization;
     
-    public AbstractCommand() {}
+    public AbstractCommand() {
+        this.localization = Factions.getInstance().getLocalizationManager();
+    }
 
     public abstract void execute(CommandSender sender, String label, String[] args);
 

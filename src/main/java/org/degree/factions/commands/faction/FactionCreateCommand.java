@@ -1,13 +1,14 @@
-package org.degree.faction.commands.faction;
+package org.degree.factions.commands.faction;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.degree.faction.commands.AbstractCommand;
-import org.degree.faction.database.FactionDatabase;
+import org.degree.factions.commands.AbstractCommand;
+import org.degree.factions.database.FactionDatabase;
 
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class FactionCreateCommand extends AbstractCommand {
 
@@ -18,14 +19,14 @@ public class FactionCreateCommand extends AbstractCommand {
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command.");
+            sender.sendMessage(localization.getMessage("messages.only_players_can_use"));
             return;
         }
 
         Player player = (Player) sender;
 
         if (args.length < 1) {
-            player.sendMessage("Usage: /faction create <name>");
+            localization.sendMessageToPlayer(player, "messages.usage_faction_create");
             return;
         }
 
@@ -35,21 +36,25 @@ public class FactionCreateCommand extends AbstractCommand {
 
         try {
             if (factionDatabase.factionExists(factionName)) {
-                player.sendMessage("A faction with this name already exists.");
+                localization.sendMessageToPlayer(player, "messages.faction_already_exists");
                 return;
             }
 
             factionDatabase.createFaction(factionName, leaderUUID, leaderName);
-            player.sendMessage("Faction " + factionName + " has been created successfully!");
+            localization.sendMessageToPlayer(
+                    player,
+                    "messages.faction_created_successfully",
+                    Map.of("factionName", factionName)
+            );
 
         } catch (SQLException e) {
-            player.sendMessage("An error occurred while creating the faction.");
+            localization.sendMessageToPlayer(player, "messages.error_creating_faction");
             e.printStackTrace();
         }
     }
 
     @Override
     public List<String> complete(CommandSender sender, String[] args) {
-        return Collections.emptyList(); // No tab completion for this command
+        return Collections.emptyList();
     }
 }

@@ -1,13 +1,14 @@
-package org.degree.faction.commands.faction;
+package org.degree.factions.commands.faction;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.degree.faction.commands.AbstractCommand;
-import org.degree.faction.database.FactionDatabase;
+import org.degree.factions.commands.AbstractCommand;
+import org.degree.factions.database.FactionDatabase;
 
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class FactionAcceptCommand extends AbstractCommand {
 
@@ -18,34 +19,36 @@ public class FactionAcceptCommand extends AbstractCommand {
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command.");
+            sender.sendMessage(localization.getMessage("messages.only_players_can_use"));
             return;
         }
 
         Player player = (Player) sender;
         String playerUUID = player.getUniqueId().toString();
-        String memberName = player.getName();
 
         try {
             String factionName = factionDatabase.getFactionNameForInvite(playerUUID);
             if (factionName == null) {
-                player.sendMessage("You don't have any pending invites or the invite has expired.");
+                localization.sendMessageToPlayer(player, "messages.no_pending_invites");
                 return;
             }
 
-            // Добавляем игрока в фракцию как обычного участника
-            factionDatabase.addMemberToFaction(factionName, playerUUID, memberName, "MEMBER");
+            factionDatabase.addMemberToFaction(factionName, playerUUID, player.getName(), "MEMBER");
             factionDatabase.removeInvite(factionName, playerUUID);
 
-            player.sendMessage("You have successfully joined the faction " + factionName + "!");
+            localization.sendMessageToPlayer(player,
+                    "messages.faction_joined_successfully",
+                    Map.of("factionName", factionName)
+            );
+
         } catch (SQLException e) {
-            player.sendMessage("An error occurred while accepting the invite.");
+            localization.sendMessageToPlayer(player, "messages.error_accepting_invite");
             e.printStackTrace();
         }
     }
 
     @Override
     public List<String> complete(CommandSender sender, String[] args) {
-        return Collections.emptyList(); // Нет автодополнения для этой команды
+        return Collections.emptyList();
     }
 }

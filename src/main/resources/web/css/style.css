@@ -1,0 +1,33 @@
+/* Отключаем горизонтальный скролл */
+body {
+  overflow-x: hidden;
+  background: linear-gradient(to right, #f7fafc, #edf2f7);
+}
+
+/* Плавный переход для ссылок */
+a {
+  transition: all 0.3s ease;
+}
+
+/* Сброс отступов */
+h1, h2, h3, p {
+  margin: 0;
+}
+
+/* Кастомный скроллбар (сайдбар) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255,255,255,0.3);
+  border-radius: 4px;
+}
+
+/* Анимация появления для секций */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}

@@ -1,9 +1,34 @@
 name: Faction
 version: '${version}'
-main: org.degree.faction.Faction
+main: org.degree.factions.Factions
 api-version: '1.21'
 commands:
   faction:
     description: Main command for faction management.
     usage: /faction
     permission-message: You do not have permission to use this command.
+
+permissions:
+  faction.usage:
+    description: Allows use of all /faction commands
+    default: false
+
+  faction.create:
+    description: Allows creating factions
+    default: false
+
+  faction.invite:
+    description: Allows inviting players to a faction
+    default: false
+
+  faction.accept:
+    description: Allows accepting faction invitations
+    default: false
+
+  faction.leave:
+    description: Allows leaving a faction
+    default: false
+
+  faction.transfer:
+    description: Allows transferring faction leadership
+    default: false

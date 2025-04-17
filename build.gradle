@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'org.degree'
@@ -20,10 +20,14 @@ repositories {
 }
 
 dependencies {
+    // Spigot API (не упаковываем внутрь)
     compileOnly "org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT"
+
+    // Ваши внутренние утилиты, их тоже хотим упаковать
     implementation 'org.ow2.asm:asm:9.5'
-    shadow 'org.ow2.asm:asm:9.5'
     implementation 'org.json:json:20210307'
+
+    // Jetty + Servlet API — тоже implementation, shadowJar их подхватит
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
     implementation 'org.eclipse.jetty:jetty-server:9.4.43.v20210629'
     implementation 'org.eclipse.jetty:jetty-servlet:9.4.43.v20210629'
@@ -46,27 +50,26 @@ tasks.register('copyWebResources', Copy) {
 }
 
 processResources {
-    def props = [version: version]
-    inputs.properties props
+    inputs.properties version: project.version
     filteringCharset 'UTF-8'
-
     filesMatching('plugin.yml') {
-        expand props
+        expand version: project.version
     }
-
-    // Копирование веб-ресурсов
     from('src/main/resources/web') {
-        into('web')
+        into 'web'
     }
-
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
-
-
 shadowJar {
-    archiveFileName = 'Faction-1.0-NOTRELEASED.jar'
+    // Берёт всё из runtimeClasspath (куда теперь входят implementation‑зависимости)
+    configurations = [project.configurations.runtimeClasspath]
+
+    // Переименуем пакеты Jetty, чтобы не было конфликтов
     relocate 'org.eclipse.jetty', 'org.degree.faction.lib.jetty'
+
+    // НЕ трогаем javax.servlet — пусть остаётся в своём пакете
+    archiveFileName.set('Factions-1.0-NOTRELEASED.jar')
 
     manifest {
         attributes(

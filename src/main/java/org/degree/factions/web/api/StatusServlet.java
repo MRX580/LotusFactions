@@ -1,13 +1,12 @@
-package org.degree.faction.web.api;
-
-import org.json.JSONObject;
+package org.degree.factions.web.api;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.json.JSONObject;
 
-public class FactionsServlet extends HttpServlet {
+public class StatusServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");

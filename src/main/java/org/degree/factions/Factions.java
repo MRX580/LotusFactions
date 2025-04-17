@@ -1,29 +1,38 @@
-package org.degree.faction;
+package org.degree.factions;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.degree.faction.commands.FactionCommandRouter;
-import org.degree.faction.database.Database;
-import org.degree.faction.web.JettyServerManager;
-import org.degree.faction.web.WebResourceManager;
+import org.degree.factions.commands.FactionCommandRouter;
+import org.degree.factions.database.Database;
+import org.degree.factions.listeners.SessionListener;
+import org.degree.factions.utils.ConfigManager;
+import org.degree.factions.utils.LocalizationManager;
+import org.degree.factions.web.JettyServerManager;
+import org.degree.factions.web.WebResourceManager;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public final class Faction extends JavaPlugin {
-    private static Faction instance;
+public final class Factions extends JavaPlugin {
+    private static Factions instance;
     private JettyServerManager serverManager;
     private WebResourceManager resourceManager;
+    private ConfigManager configManager;
+    private LocalizationManager localizationManager;
 
     @Override
     public void onEnable() {
         instance = this;
-        Path dataFolderPath = getDataFolder().toPath();
-        serverManager = new JettyServerManager(8085, dataFolderPath);
-        resourceManager = new WebResourceManager(dataFolderPath);
+        configManager = new ConfigManager(this);
+        String lang = configManager.getString("lang", "en");
+        localizationManager = new LocalizationManager(this, lang);
+        serverManager = new JettyServerManager(8085);
+        resourceManager = new WebResourceManager();
 
         getCommand("faction").setExecutor(new FactionCommandRouter());
+
+        getServer().getPluginManager().registerEvents(new SessionListener(), this);
+
 
         Path webDir = Paths.get(getDataFolder().getPath(), "web");
         try {
@@ -51,7 +60,15 @@ public final class Faction extends JavaPlugin {
         new Database().closeConnection();
     }
 
-    public static Faction getInstance() {
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    public LocalizationManager getLocalizationManager() {
+        return localizationManager;
+    }
+
+    public static Factions getInstance() {
         return instance;
     }
 }
