@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'org.degree'
-version = '1.0-NOTRELEASED'
+version = '0.2.0-NOTRELEASED'
 description = 'Plugin for factions'
 
 repositories {
@@ -17,17 +17,21 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven {
+        url = 'https://repo.extendedclip.com/releases/'
+    }
 }
 
 dependencies {
-    // Spigot API (не упаковываем внутрь)
     compileOnly "org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT"
 
-    // Ваши внутренние утилиты, их тоже хотим упаковать
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+
     implementation 'org.ow2.asm:asm:9.5'
     implementation 'org.json:json:20210307'
 
-    // Jetty + Servlet API — тоже implementation, shadowJar их подхватит
+    implementation 'org.bstats:bstats-bukkit:3.0.0'
+
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
     implementation 'org.eclipse.jetty:jetty-server:9.4.43.v20210629'
     implementation 'org.eclipse.jetty:jetty-servlet:9.4.43.v20210629'
@@ -62,14 +66,12 @@ processResources {
 }
 
 shadowJar {
-    // Берёт всё из runtimeClasspath (куда теперь входят implementation‑зависимости)
     configurations = [project.configurations.runtimeClasspath]
 
-    // Переименуем пакеты Jetty, чтобы не было конфликтов
     relocate 'org.eclipse.jetty', 'org.degree.faction.lib.jetty'
+    relocate 'org.bstats', 'org.degree.libs.bstats'
 
-    // НЕ трогаем javax.servlet — пусть остаётся в своём пакете
-    archiveFileName.set('Factions-1.0-NOTRELEASED.jar')
+    archiveFileName.set('Factions-0.2.0-NOTRELEASED.jar')
 
     manifest {
         attributes(

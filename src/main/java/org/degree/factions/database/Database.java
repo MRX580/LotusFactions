@@ -21,14 +21,15 @@ public class Database {
             connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath);
 
             try (Statement stmt = connection.createStatement()) {
-                // Существующие таблицы
                 stmt.execute("CREATE TABLE IF NOT EXISTS factions (" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "name TEXT NOT NULL UNIQUE," +
                         "leader_uuid TEXT NOT NULL," +
                         "leader_name TEXT NOT NULL," +
-                        "creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                        "creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+                        "color TEXT NOT NULL DEFAULT '#FFFFFF'" +
                         ");");
+
 
                 stmt.execute("CREATE TABLE IF NOT EXISTS faction_members (" +
                         "faction_name TEXT NOT NULL," +

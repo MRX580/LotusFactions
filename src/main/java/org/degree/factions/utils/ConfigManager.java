@@ -13,18 +13,15 @@ public class ConfigManager {
         loadConfig();
     }
 
-    // Загрузка config.yml
     private void loadConfig() {
         config = plugin.getConfig();
     }
 
-    // Перезагрузка config.yml
     public void reload() {
         plugin.reloadConfig();
         loadConfig();
     }
 
-    // Методы для получения значений из config.yml
     public String getString(String path, String defaultValue) {
         return config.getString(path, defaultValue);
     }
@@ -37,14 +34,12 @@ public class ConfigManager {
         return config.getBoolean(path, defaultValue);
     }
 
-    // Примеры получения настроек
     public int getMaxFactionMembers() {
         return getInt("faction-settings.max-members", 10);
     }
 
-    public String getFactionPrefix() {
-        return getString("faction-settings.prefix", "[Faction]");
-    }
+    public int getInviteCooldownSeconds() { return getInt("faction-settings.invite-cooldown-seconds", 60); }
 
-    // Добавьте другие методы для специфических настроек плагина
+    public int getWebPort() { return getInt("web-port", 8085); }
+
 }

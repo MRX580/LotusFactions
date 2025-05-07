@@ -2,6 +2,7 @@ name: Faction
 version: '${version}'
 main: org.degree.factions.Factions
 api-version: '1.21'
+softdepend: ["PlaceholderAPI"]
 commands:
   faction:
     description: Main command for faction management.
@@ -11,24 +12,28 @@ commands:
 permissions:
   faction.usage:
     description: Allows use of all /faction commands
-    default: false
+    default: op
 
   faction.create:
     description: Allows creating factions
-    default: false
+    default: op
+
+  faction.stats:
+    description: Allows open faction stats
+    default: op
 
   faction.invite:
     description: Allows inviting players to a faction
-    default: false
+    default: op
 
   faction.accept:
     description: Allows accepting faction invitations
-    default: false
+    default: op
 
   faction.leave:
     description: Allows leaving a faction
-    default: false
+    default: op
 
   faction.transfer:
     description: Allows transferring faction leadership
-    default: false
+    default: op

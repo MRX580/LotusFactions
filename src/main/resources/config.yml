@@ -1,4 +1,10 @@
 lang: ru
 
+web-port: 8085
+
 discord-integration:
   token: "YOUR-TOKEN"
+
+faction-settings:
+  max-members: 10
+  invite-cooldown-seconds: 60

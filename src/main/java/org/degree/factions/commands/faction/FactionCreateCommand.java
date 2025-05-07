@@ -13,8 +13,7 @@ import java.util.Map;
 public class FactionCreateCommand extends AbstractCommand {
 
     private final FactionDatabase factionDatabase = new FactionDatabase();
-
-    public FactionCreateCommand() {}
+    private static final String HEX_REGEX = "^#[0-9A-Fa-f]{6}$";
 
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
@@ -22,7 +21,6 @@ public class FactionCreateCommand extends AbstractCommand {
             sender.sendMessage(localization.getMessage("messages.only_players_can_use"));
             return;
         }
-
         Player player = (Player) sender;
 
         if (args.length < 1) {
@@ -31,6 +29,18 @@ public class FactionCreateCommand extends AbstractCommand {
         }
 
         String factionName = args[0];
+
+        String colorHex = "#FFFFFF";
+        if (args.length >= 2) {
+            String inputColor = args[1];
+            if (inputColor.matches(HEX_REGEX)) {
+                colorHex = inputColor;
+            } else {
+                localization.sendMessageToPlayer(player, "messages.invalid_color_format");
+                return;
+            }
+        }
+
         String leaderUUID = player.getUniqueId().toString();
         String leaderName = player.getName();
 
@@ -40,13 +50,13 @@ public class FactionCreateCommand extends AbstractCommand {
                 return;
             }
 
-            factionDatabase.createFaction(factionName, leaderUUID, leaderName);
+            // вызываем перегруженный метод с цветом
+            factionDatabase.createFaction(factionName, leaderUUID, leaderName, colorHex);
             localization.sendMessageToPlayer(
                     player,
                     "messages.faction_created_successfully",
-                    Map.of("factionName", factionName)
+                    Map.of("factionName", factionName, "color", colorHex)
             );
-
         } catch (SQLException e) {
             localization.sendMessageToPlayer(player, "messages.error_creating_faction");
             e.printStackTrace();
@@ -55,6 +65,11 @@ public class FactionCreateCommand extends AbstractCommand {
 
     @Override
     public List<String> complete(CommandSender sender, String[] args) {
+        if (args.length == 1) {
+            return Collections.singletonList("<FactionName>");
+        } else if (args.length == 2) {
+            return Collections.singletonList("<hexColor>");
+        }
         return Collections.emptyList();
     }
 }

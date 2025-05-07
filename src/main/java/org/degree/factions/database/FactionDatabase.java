@@ -1,5 +1,7 @@
 package org.degree.factions.database;
 
+import org.degree.factions.models.Faction;
+
 import java.sql.*;
 import java.util.*;
 
@@ -40,6 +42,43 @@ public class FactionDatabase {
             pstmt.setString(1, factionName);
             pstmt.setString(2, inviteeUUID);
             pstmt.executeUpdate();
+        }
+    }
+
+    public String getFactionNameByLeader(String leaderUUID) throws SQLException {
+        String sql = "SELECT name FROM factions WHERE leader_uuid = ?";
+        try (PreparedStatement ps = database.prepareStatement(sql)) {
+            ps.setString(1, leaderUUID);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getString("name") : null;
+            }
+        }
+    }
+
+    public void deleteFaction(String factionName) throws SQLException {
+        // удаляем участников
+        try (PreparedStatement ps = database.prepareStatement(
+                "DELETE FROM faction_members WHERE faction_name = ?")) {
+            ps.setString(1, factionName);
+            ps.executeUpdate();
+        }
+        // удаляем инвайты
+        try (PreparedStatement ps = database.prepareStatement(
+                "DELETE FROM faction_invites WHERE faction_name = ?")) {
+            ps.setString(1, factionName);
+            ps.executeUpdate();
+        }
+        // удаляем сессии
+        try (PreparedStatement ps = database.prepareStatement(
+                "DELETE FROM faction_sessions WHERE faction_name = ?")) {
+            ps.setString(1, factionName);
+            ps.executeUpdate();
+        }
+        // удаляем саму фракцию
+        try (PreparedStatement ps = database.prepareStatement(
+                "DELETE FROM factions WHERE name = ?")) {
+            ps.setString(1, factionName);
+            ps.executeUpdate();
         }
     }
 
@@ -93,16 +132,18 @@ public class FactionDatabase {
         }
     }
 
-    public void createFaction(String name, String leaderUUID, String leaderName) throws SQLException {
-        String sql = "INSERT INTO factions (name, leader_uuid, leader_name) VALUES (?, ?, ?)";
+    public void createFaction(String name, String leaderUUID, String leaderName, String colorHex) throws SQLException {
+        String sql = "INSERT INTO factions (name, leader_uuid, leader_name, color) VALUES (?, ?, ?, ?)";
         try (PreparedStatement pstmt = database.prepareStatement(sql)) {
             pstmt.setString(1, name);
             pstmt.setString(2, leaderUUID);
             pstmt.setString(3, leaderName);
+            pstmt.setString(4, colorHex);
             pstmt.executeUpdate();
         }
         addMemberToFaction(name, leaderUUID, leaderName, "LEADER");
     }
+
 
     public void removeMemberFromFaction(String playerUUID) throws SQLException {
         String sql = "DELETE FROM faction_members WHERE member_uuid = ?";
@@ -353,5 +394,35 @@ public class FactionDatabase {
             ps.setString(2, playerUuid);
             ps.executeUpdate();
         } catch (SQLException ignored) {}
+    }
+
+    public Faction loadFaction(String name) throws SQLException {
+        String sql = "SELECT id, name, leader_uuid, leader_name, creation_date, color FROM factions WHERE name = ?";
+        try (PreparedStatement ps = database.prepareStatement(sql)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                Faction f = new Faction();
+                f.setId(rs.getInt("id"));
+                f.setName(rs.getString("name"));
+                f.setLeaderUuid(rs.getString("leader_uuid"));
+                f.setLeaderName(rs.getString("leader_name"));
+                f.setCreationDate(rs.getTimestamp("creation_date"));
+                f.setColorHex(rs.getString("color"));
+                return f;
+            }
+        }
+    }
+
+    public List<String> getAllFactionNames() throws SQLException {
+        List<String> names = new ArrayList<>();
+        String sql = "SELECT name FROM factions";
+        try (PreparedStatement ps = database.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                names.add(rs.getString("name"));
+            }
+        }
+        return names;
     }
 }

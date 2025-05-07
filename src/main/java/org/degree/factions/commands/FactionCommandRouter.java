@@ -19,6 +19,9 @@ public class FactionCommandRouter extends AbstractCommand {
         subCommands.put("accept", new FactionAcceptCommand());
         subCommands.put("leave", new FactionLeaveCommand());
         subCommands.put("transfer", new FactionTransferCommand());
+        subCommands.put("dissolve",  new FactionDissolveCommand());
+        subCommands.put("delete",    new FactionDeleteCommand());
+        subCommands.put("stats",    new FactionStatsCommand());
     }
 
     @Override
@@ -64,7 +67,15 @@ public class FactionCommandRouter extends AbstractCommand {
                     allowed.add(sub);
                 }
             }
-            return allowed;
+            String prefix = args[0].toLowerCase();
+            List<String> filtered = new ArrayList<>();
+            for (String sub : allowed) {
+                if (sub.startsWith(prefix)) {
+                    filtered.add(sub);
+                }
+            }
+
+            return filtered;
         } else if (args.length > 1) {
             AbstractCommand sub = subCommands.get(args[0].toLowerCase());
             if (sub != null) {

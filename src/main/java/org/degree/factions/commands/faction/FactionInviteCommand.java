@@ -1,22 +1,25 @@
+// src/main/java/org/degree/factions/commands/faction/FactionInviteCommand.java
 package org.degree.factions.commands.faction;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.degree.factions.Factions;
 import org.degree.factions.commands.AbstractCommand;
 import org.degree.factions.database.FactionDatabase;
+import org.degree.factions.utils.ConfigManager;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FactionInviteCommand extends AbstractCommand {
 
     private final FactionDatabase factionDatabase = new FactionDatabase();
+    private final Map<UUID, Long> lastInvite = new ConcurrentHashMap<>();
 
-    public FactionInviteCommand() {}
+    public FactionInviteCommand() {
+    }
 
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
@@ -24,12 +27,24 @@ public class FactionInviteCommand extends AbstractCommand {
             sender.sendMessage(localization.getMessage("messages.only_players_can_use"));
             return;
         }
-
         Player inviter = (Player) sender;
+        UUID inviterId = inviter.getUniqueId();
+
+        long cooldownMs = config.getInviteCooldownSeconds() * 1000L;
+        long now = System.currentTimeMillis();
+        Long last = lastInvite.get(inviterId);
+        if (last != null && now - last < cooldownMs) {
+            long secsLeft = (cooldownMs - (now - last)) / 1000;
+            inviter.sendMessage(localization.getMessage(
+                    "messages.invite_cooldown",
+                    Map.of("time", String.valueOf(secsLeft))
+            ));
+            return;
+        }
 
         String factionName;
         try {
-            factionName = factionDatabase.getFactionNameForPlayer(inviter.getUniqueId().toString());
+            factionName = factionDatabase.getFactionNameForPlayer(inviterId.toString());
             if (factionName == null) {
                 localization.sendMessageToPlayer(inviter, "messages.not_in_faction");
                 return;
@@ -57,20 +72,19 @@ public class FactionInviteCommand extends AbstractCommand {
         try {
             factionDatabase.addInvite(
                     factionName,
-                    inviter.getUniqueId().toString(),
+                    inviterId.toString(),
                     invitee.getUniqueId().toString()
             );
+            lastInvite.put(inviterId, now);
 
             localization.sendMessageToPlayer(invitee,
                     "messages.invited_to_faction",
                     Map.of("inviterName", inviter.getName())
             );
-
             localization.sendMessageToPlayer(inviter,
                     "messages.invitation_sent",
                     Map.of("inviteeName", invitee.getName())
             );
-
         } catch (SQLException e) {
             localization.sendMessageToPlayer(inviter, "messages.error_sending_invite");
             e.printStackTrace();
@@ -81,9 +95,9 @@ public class FactionInviteCommand extends AbstractCommand {
     public List<String> complete(CommandSender sender, String[] args) {
         if (args.length == 1) {
             List<String> suggestions = new ArrayList<>();
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (!player.equals(sender)) {
-                    suggestions.add(player.getName());
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (!p.equals(sender)) {
+                    suggestions.add(p.getName());
                 }
             }
             return suggestions;
