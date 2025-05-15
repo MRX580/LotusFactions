@@ -1,6 +1,11 @@
 lang: ru
 
-web-port: 8085
+webserver:
+  web-port: 8085
+  alternative-Ip:
+    enabled: false # Automatically detected if false
+
+    address: your.domain.here
 
 discord-integration:
   token: "YOUR-TOKEN"

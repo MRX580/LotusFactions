@@ -35,7 +35,6 @@ public class LocalizationManager {
 
         localeConfig = YamlConfiguration.loadConfiguration(localeFile);
 
-        // Загрузка сообщений в Map
         for (String key : localeConfig.getKeys(true)) {
             if (localeConfig.isString(key)) {
                 messages.put(key, localeConfig.getString(key));

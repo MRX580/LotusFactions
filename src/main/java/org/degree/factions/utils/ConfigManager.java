@@ -39,7 +39,8 @@ public class ConfigManager {
     }
 
     public int getInviteCooldownSeconds() { return getInt("faction-settings.invite-cooldown-seconds", 60); }
-
-    public int getWebPort() { return getInt("web-port", 8085); }
+    public boolean isAlternativeIPEnabled() { return getBoolean("webserver.alternative-Ip.enabled", false); }
+    public String getAlternativeIp() { return getString("webserver.alternative-Ip.address", "localhost"); }
+    public int getWebPort() { return getInt("webserver.web-port", 8085); }
 
 }
