@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'org.degree'
-version = '0.2.0-NOTRELEASED'
+version = '0.2.1-NOTRELEASED'
 description = 'Plugin for factions'
 
 repositories {
@@ -71,7 +71,7 @@ shadowJar {
     relocate 'org.eclipse.jetty', 'org.degree.faction.lib.jetty'
     relocate 'org.bstats', 'org.degree.libs.bstats'
 
-    archiveFileName.set('Factions-0.2.0-NOTRELEASED.jar')
+    archiveFileName.set("${project.name}-${project.version}.jar")
 
     manifest {
         attributes(

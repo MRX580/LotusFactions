@@ -2,9 +2,15 @@ package org.degree.factions;
 
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.degree.factions.commands.FactionCommandRouter;
 import org.degree.factions.database.Database;
+import org.degree.factions.database.FactionDatabase;
+import org.degree.factions.listeners.BlockStatListener;
+import org.degree.factions.listeners.BlockStatQuitListener;
+import org.degree.factions.listeners.FactionJoinListener;
 import org.degree.factions.listeners.SessionListener;
+import org.degree.factions.utils.BlockStatCache;
 import org.degree.factions.utils.ConfigManager;
 import org.degree.factions.utils.LocalizationManager;
 import org.degree.factions.web.JettyServerManager;
@@ -13,6 +19,7 @@ import org.degree.factions.web.WebResourceManager;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public final class Factions extends JavaPlugin {
     private static Factions instance;
@@ -28,6 +35,7 @@ public final class Factions extends JavaPlugin {
         new Metrics(this, pluginId);
 
         instance = this;
+        FactionDatabase factionDatabase = new FactionDatabase();
         configManager = new ConfigManager(this);
         String lang = configManager.getString("lang", "en");
         int webPort = configManager.getWebPort();
@@ -38,6 +46,13 @@ public final class Factions extends JavaPlugin {
         getCommand("faction").setExecutor(new FactionCommandRouter());
 
         getServer().getPluginManager().registerEvents(new SessionListener(), this);
+        getServer().getPluginManager().registerEvents(new BlockStatListener(factionDatabase), this);
+        getServer().getPluginManager().registerEvents(new BlockStatQuitListener(factionDatabase), this);
+        getServer().getPluginManager().registerEvents(new FactionJoinListener(factionDatabase), this);
+
+        // Регистрация раннера для сохранения статистики блоков
+        new BlockStatSaverTask(factionDatabase).runTaskTimer(this, 20 * 60, 20 * 60); // раз в 1 минуту
+
 
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new FactionPlaceholder(this).register();
@@ -71,6 +86,27 @@ public final class Factions extends JavaPlugin {
         }
         new Database().closeConnection();
     }
+
+    public class BlockStatSaverTask extends BukkitRunnable {
+        private final FactionDatabase db;
+
+        public BlockStatSaverTask(FactionDatabase db) {
+            this.db = db;
+        }
+
+        @Override
+        public void run() {
+            Map<String, Map<String, BlockStatCache.BlockStat>> allStats = BlockStatCache.getAndClearStats();
+            for (String uuid : allStats.keySet()) {
+                for (Map.Entry<String, BlockStatCache.BlockStat> entry : allStats.get(uuid).entrySet()) {
+                    String blockType = entry.getKey();
+                    BlockStatCache.BlockStat stat = entry.getValue();
+                    db.saveOrUpdateBlockStat(uuid, stat.factionName, blockType, stat.placed, stat.broken);
+                }
+            }
+        }
+    }
+
 
     public ConfigManager getConfigManager() {
         return configManager;

@@ -48,7 +48,6 @@ public class Database {
                         "PRIMARY KEY(invitee_uuid, faction_name)" +
                         ");");
 
-                // Новая таблица для сессий
                 stmt.execute("CREATE TABLE IF NOT EXISTS faction_sessions (" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "faction_name TEXT NOT NULL," +
@@ -56,6 +55,16 @@ public class Database {
                         "login_time TIMESTAMP NOT NULL," +
                         "logout_time TIMESTAMP" +
                         ");");
+
+                stmt.execute("CREATE TABLE IF NOT EXISTS faction_block_stats (" +
+                        "player_uuid  TEXT NOT NULL," +
+                        "faction_name TEXT NOT NULL," +
+                        "block_type   TEXT NOT NULL," +
+                        "placed       INTEGER NOT NULL DEFAULT 0," +
+                        "broken       INTEGER NOT NULL DEFAULT 0," +
+                        "PRIMARY KEY (player_uuid, block_type)" +
+                        ");");
+
             }
 
             Factions.getInstance().getLogger().info("SQLite database setup completed.");

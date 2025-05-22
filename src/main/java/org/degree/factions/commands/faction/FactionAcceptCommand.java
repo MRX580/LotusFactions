@@ -4,6 +4,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.degree.factions.commands.AbstractCommand;
 import org.degree.factions.database.FactionDatabase;
+import org.degree.factions.utils.FactionCache;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -35,6 +36,8 @@ public class FactionAcceptCommand extends AbstractCommand {
 
             factionDatabase.addMemberToFaction(factionName, playerUUID, player.getName(), "MEMBER");
             factionDatabase.removeInvite(factionName, playerUUID);
+
+            FactionCache.setFaction(playerUUID, factionName);
 
             localization.sendMessageToPlayer(player,
                     "messages.faction_joined_successfully",

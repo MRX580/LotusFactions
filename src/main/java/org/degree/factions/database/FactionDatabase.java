@@ -56,25 +56,21 @@ public class FactionDatabase {
     }
 
     public void deleteFaction(String factionName) throws SQLException {
-        // удаляем участников
         try (PreparedStatement ps = database.prepareStatement(
                 "DELETE FROM faction_members WHERE faction_name = ?")) {
             ps.setString(1, factionName);
             ps.executeUpdate();
         }
-        // удаляем инвайты
         try (PreparedStatement ps = database.prepareStatement(
                 "DELETE FROM faction_invites WHERE faction_name = ?")) {
             ps.setString(1, factionName);
             ps.executeUpdate();
         }
-        // удаляем сессии
         try (PreparedStatement ps = database.prepareStatement(
                 "DELETE FROM faction_sessions WHERE faction_name = ?")) {
             ps.setString(1, factionName);
             ps.executeUpdate();
         }
-        // удаляем саму фракцию
         try (PreparedStatement ps = database.prepareStatement(
                 "DELETE FROM factions WHERE name = ?")) {
             ps.setString(1, factionName);
@@ -141,7 +137,6 @@ public class FactionDatabase {
             pstmt.setString(4, colorHex);
             pstmt.executeUpdate();
         }
-        addMemberToFaction(name, leaderUUID, leaderName, "LEADER");
     }
 
 
@@ -425,4 +420,25 @@ public class FactionDatabase {
         }
         return names;
     }
+
+    public void saveOrUpdateBlockStat(String playerUuid, String factionName, String blockType, int placed, int broken) {
+        try (PreparedStatement ps = database.prepareStatement(
+                "INSERT INTO faction_block_stats (player_uuid, faction_name, block_type, placed, broken) " +
+                        "VALUES (?, ?, ?, ?, ?) " +
+                        "ON CONFLICT(player_uuid, block_type) DO UPDATE SET " +
+                        "placed = placed + EXCLUDED.placed, " +
+                        "broken = broken + EXCLUDED.broken, " +
+                        "faction_name = EXCLUDED.faction_name"
+        )) {
+            ps.setString(1, playerUuid);
+            ps.setString(2, factionName);
+            ps.setString(3, blockType);
+            ps.setInt(4, placed);
+            ps.setInt(5, broken);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

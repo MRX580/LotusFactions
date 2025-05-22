@@ -4,6 +4,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.degree.factions.commands.AbstractCommand;
 import org.degree.factions.database.FactionDatabase;
+import org.degree.factions.utils.FactionCache;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -52,6 +53,10 @@ public class FactionCreateCommand extends AbstractCommand {
 
             // вызываем перегруженный метод с цветом
             factionDatabase.createFaction(factionName, leaderUUID, leaderName, colorHex);
+            factionDatabase.addMemberToFaction(factionName, leaderUUID, leaderName, "LEADER");
+
+            FactionCache.setFaction(leaderUUID, factionName);
+
             localization.sendMessageToPlayer(
                     player,
                     "messages.faction_created_successfully",
