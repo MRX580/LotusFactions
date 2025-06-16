@@ -6,15 +6,11 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.degree.factions.commands.FactionCommandRouter;
 import org.degree.factions.database.Database;
 import org.degree.factions.database.FactionDatabase;
-import org.degree.factions.listeners.BlockStatListener;
-import org.degree.factions.listeners.BlockStatQuitListener;
-import org.degree.factions.listeners.FactionJoinListener;
-import org.degree.factions.listeners.SessionListener;
+import org.degree.factions.http.FactionApiClient;
+import org.degree.factions.listeners.*;
 import org.degree.factions.utils.BlockStatCache;
 import org.degree.factions.utils.ConfigManager;
 import org.degree.factions.utils.LocalizationManager;
-import org.degree.factions.web.JettyServerManager;
-import org.degree.factions.web.WebResourceManager;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -23,10 +19,9 @@ import java.util.Map;
 
 public final class Factions extends JavaPlugin {
     private static Factions instance;
-    private JettyServerManager serverManager;
-    private WebResourceManager resourceManager;
     private ConfigManager configManager;
     private LocalizationManager localizationManager;
+    private FactionApiClient apiClient;
 
     @Override
     public void onEnable() {
@@ -38,10 +33,9 @@ public final class Factions extends JavaPlugin {
         FactionDatabase factionDatabase = new FactionDatabase();
         configManager = new ConfigManager(this);
         String lang = configManager.getString("lang", "en");
-        int webPort = configManager.getWebPort();
         localizationManager = new LocalizationManager(this, lang);
-        serverManager = new JettyServerManager(webPort);
-        resourceManager = new WebResourceManager();
+
+        apiClient = new FactionApiClient(this, "https://lotuscraft.fun", factionDatabase);
 
         getCommand("faction").setExecutor(new FactionCommandRouter());
 
@@ -49,6 +43,7 @@ public final class Factions extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlockStatListener(factionDatabase), this);
         getServer().getPluginManager().registerEvents(new BlockStatQuitListener(factionDatabase), this);
         getServer().getPluginManager().registerEvents(new FactionJoinListener(factionDatabase), this);
+        getServer().getPluginManager().registerEvents(new KillStatListener(factionDatabase), this);
 
         // Регистрация раннера для сохранения статистики блоков
         new BlockStatSaverTask(factionDatabase).runTaskTimer(this, 20 * 60, 20 * 60); // раз в 1 минуту
@@ -61,24 +56,11 @@ public final class Factions extends JavaPlugin {
             getLogger().warning("PlaceholderAPI not found; FactionPlaceholder not registered");
         }
 
-        Path webDir = Paths.get(getDataFolder().getPath(), "web");
-        try {
-            resourceManager.copyResources("/web", webDir);
-            serverManager.startServer(webDir);
-            getLogger().info("Web-server has started on port " + webPort);
-        } catch (IOException e) {
-            getLogger().severe("Error during copying resources: " + e.getMessage());
-            e.printStackTrace();
-        } catch (Exception e) {
-            getLogger().severe("Error starting server: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 
     @Override
     public void onDisable() {
         try {
-            serverManager.stopServer();
             getLogger().info("Web-server has stopped");
         } catch (Exception e) {
             getLogger().severe("Error during stopping server: " + e.getMessage());
@@ -119,4 +101,6 @@ public final class Factions extends JavaPlugin {
     public static Factions getInstance() {
         return instance;
     }
+
+    public FactionApiClient getApiClient() { return apiClient; }
 }

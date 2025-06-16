@@ -34,7 +34,7 @@ public class BlockStatListener implements Listener {
         String blockType = event.getBlock().getType().name();
         String faction = FactionCache.getFaction(uuid);
         if (faction != null) {
-            BlockStatCache.incrementPlaced(uuid, faction, blockType);
+            BlockStatCache.incrementBroken(uuid, faction, blockType);
         }
     }
 }

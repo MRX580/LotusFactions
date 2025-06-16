@@ -208,7 +208,7 @@ public class FactionDatabase {
         String sql =
                 "SELECT " +
                         "  date(login_time/1000, 'unixepoch','localtime') AS date, " +
-                        "  COUNT(*) AS count " +
+                        "  COUNT(DISTINCT player_uuid) AS count " +
                         "FROM faction_sessions " +
                         "WHERE faction_name = ? " +
                         "GROUP BY date " +
@@ -220,7 +220,7 @@ public class FactionDatabase {
                 while (rs.next()) {
                     Map<String,Object> row = new HashMap<>();
                     row.put("date",  rs.getString("date"));
-                    row.put("count", rs.getInt   ("count"));
+                    row.put("count", rs.getInt("count"));
                     list.add(row);
                 }
             }
@@ -252,95 +252,6 @@ public class FactionDatabase {
             }
         }
         return list;
-    }
-
-    public List<Map<String,Object>> getLastOnline(String factionName) throws SQLException {
-        String sql =
-                "SELECT " +
-                        "  m.member_name AS name, " +
-                        "  datetime(" +
-                        "    MAX(COALESCE(s.logout_time, s.login_time)) / 1000," +
-                        "    'unixepoch','localtime'" +
-                        "  ) AS lastOnline " +
-                        "FROM faction_sessions s " +
-                        "  JOIN faction_members m ON s.player_uuid = m.member_uuid " +
-                        "WHERE s.faction_name = ? " +
-                        "GROUP BY s.player_uuid " +
-                        "ORDER BY MAX(COALESCE(s.logout_time, s.login_time)) DESC";
-
-        List<Map<String,Object>> list = new ArrayList<>();
-        try (PreparedStatement ps = database.prepareStatement(sql)) {
-            ps.setString(1, factionName);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Map<String,Object> row = new HashMap<>();
-                    row.put("name",       rs.getString("name"));
-                    row.put("lastOnline", rs.getString("lastOnline"));
-                    list.add(row);
-                }
-            }
-        }
-        return list;
-    }
-
-    public Map<String,Object> getMostActiveMember(String factionName) throws SQLException {
-        String sql =
-                "SELECT player_uuid, " +
-                        "       SUM((logout_time - login_time) / 1000) AS seconds " +
-                        "  FROM faction_sessions " +
-                        " WHERE faction_name = ? " +
-                        "   AND logout_time IS NOT NULL " +
-                        " GROUP BY player_uuid " +
-                        " ORDER BY seconds DESC " +
-                        " LIMIT 1";
-        try (PreparedStatement ps = database.prepareStatement(sql)) {
-            ps.setString(1, factionName);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String uuid = rs.getString("player_uuid");
-                    long seconds = rs.getLong("seconds");
-
-                    // Берём имя по UUID
-                    String name = "-";
-                    String q = "SELECT member_name FROM faction_members WHERE member_uuid = ?";
-                    try (PreparedStatement ps2 = database.prepareStatement(q)) {
-                        ps2.setString(1, uuid);
-                        try (ResultSet r2 = ps2.executeQuery()) {
-                            if (r2.next()) name = r2.getString("member_name");
-                        }
-                    }
-
-                    Map<String,Object> result = new HashMap<>();
-                    result.put("name",    name);
-                    result.put("seconds", seconds);
-                    return result;
-                }
-            }
-        }
-        // Дефолт, если нет ни одной законченной сессии
-        Map<String,Object> fallback = new HashMap<>();
-        fallback.put("name",    "-");
-        fallback.put("seconds", 0L);
-        return fallback;
-    }
-
-    public long getAverageOnlineSeconds(String factionName) throws SQLException {
-        String sql =
-                "SELECT ROUND(AVG(user_avg)) AS avgsec FROM (" +
-                        "  SELECT player_uuid, AVG((logout_time - login_time) / 1000.0) AS user_avg " +
-                        "    FROM faction_sessions " +
-                        "   WHERE faction_name = ? " +
-                        "     AND logout_time IS NOT NULL " +
-                        "     AND (logout_time - login_time) >= ? " +      // <-- добавляем фильтр
-                        "   GROUP BY player_uuid" +
-                        ")";
-        try (PreparedStatement ps = database.prepareStatement(sql)) {
-            ps.setString(1, factionName);
-            ps.setLong   (2, MIN_SESSION_MS);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getLong("avgsec") : 0;
-            }
-        }
     }
 
     public void logSessionStart(String factionName, String playerUuid) {
@@ -440,5 +351,107 @@ public class FactionDatabase {
             e.printStackTrace();
         }
     }
+
+    public List<Map<String, String>> getMemberNameUuidPairsOfFaction(String factionName) throws SQLException {
+        List<Map<String, String>> list = new ArrayList<>();
+        String sql = "SELECT member_name, member_uuid FROM faction_members WHERE faction_name = ?";
+        try (PreparedStatement ps = database.prepareStatement(sql)) {
+            ps.setString(1, factionName);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("name", rs.getString("member_name"));
+                    map.put("uuid", rs.getString("member_uuid"));
+                    list.add(map);
+                }
+            }
+        }
+        return list;
+    }
+
+    public long getTotalHoursForPlayer(String playerUUID) throws SQLException {
+        String sql = "SELECT SUM((logout_time - login_time) / 1000) AS seconds FROM faction_sessions WHERE player_uuid = ? AND logout_time IS NOT NULL";
+        try (PreparedStatement ps = database.prepareStatement(sql)) {
+            ps.setString(1, playerUUID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getLong("seconds") / 3600;
+            }
+        }
+        return 0;
+    }
+
+    public void incrementKill(String playerUuid, String factionName) {
+        try (PreparedStatement ps = database.prepareStatement(
+                "INSERT INTO faction_kill_stats (player_uuid, faction_name, kills) " +
+                        "VALUES (?, ?, 1) " +
+                        "ON CONFLICT(player_uuid) DO UPDATE SET " +
+                        "kills = kills + 1, faction_name = EXCLUDED.faction_name"
+        )) {
+            ps.setString(1, playerUuid);
+            ps.setString(2, factionName);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int getTotalKillsForPlayer(String playerUUID) throws SQLException {
+        String sql = "SELECT kills FROM faction_kill_stats WHERE player_uuid = ?";
+        try (PreparedStatement ps = database.prepareStatement(sql)) {
+            ps.setString(1, playerUUID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("kills");
+            }
+        }
+        return 0;
+    }
+
+    public String getMostKillsMember(String factionName) throws SQLException {
+        return "-";
+    }
+
+    public List<Map<String, Object>> getResourcesOfFaction(String factionName) {
+        return new ArrayList<>();
+    }
+
+    public String getMostActiveMember(String factionName) throws SQLException {
+        String sql =
+                "SELECT m.member_name, SUM((s.logout_time - s.login_time) / 1000) AS seconds " +
+                        "FROM faction_sessions s JOIN faction_members m ON s.player_uuid = m.member_uuid " +
+                        "WHERE s.faction_name = ? AND s.logout_time IS NOT NULL " +
+                        "GROUP BY s.player_uuid " +
+                        "ORDER BY seconds DESC LIMIT 1";
+        try (PreparedStatement ps = database.prepareStatement(sql)) {
+            ps.setString(1, factionName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("member_name");
+            }
+        }
+        return "-";
+    }
+
+    public List<Map<String, Object>> getBlocksOfFaction(String factionName) throws SQLException {
+        List<Map<String, Object>> blocks = new ArrayList<>();
+        String sql =
+                "SELECT m.member_name, SUM(b.placed) as placed, SUM(b.broken) as broken " +
+                        "FROM faction_block_stats b " +
+                        "JOIN faction_members m ON b.player_uuid = m.member_uuid " +
+                        "WHERE b.faction_name = ? " +
+                        "GROUP BY m.member_name";
+        try (PreparedStatement ps = database.prepareStatement(sql)) {
+            ps.setString(1, factionName);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", rs.getString("member_name"));
+                    map.put("placed", rs.getInt("placed"));
+                    map.put("broken", rs.getInt("broken"));
+                    blocks.add(map);
+                }
+            }
+        }
+        return blocks;
+    }
+
 
 }

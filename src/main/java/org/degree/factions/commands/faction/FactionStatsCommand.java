@@ -2,6 +2,7 @@ package org.degree.factions.commands.faction;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.degree.factions.Factions;
 import org.degree.factions.commands.AbstractCommand;
 import org.degree.factions.database.FactionDatabase;
 
@@ -37,9 +38,12 @@ public class FactionStatsCommand extends AbstractCommand {
                 return;
             }
 
+            // Отправка POST-запроса с реальными данными фракции
+            apiClient.postFactionFromDatabase(factionName);
+
+            // Далее всё как было (отправка игроку ссылки на статистику)
             String encoded = URLEncoder.encode(factionName, StandardCharsets.UTF_8);
             TextComponent link = getLink(encoded);
-
             player.spigot().sendMessage(link);
 
         } catch (SQLException e) {
@@ -49,13 +53,7 @@ public class FactionStatsCommand extends AbstractCommand {
     }
 
     private @NotNull TextComponent getLink(String encoded) {
-        String serverIP = getServerIP();
-        if (config.isAlternativeIPEnabled()){
-            serverIP = config.getAlternativeIp();
-        }
-        String factionPort = String.valueOf(config.getWebPort());
-
-        String url = "http://" + serverIP + ":" + factionPort + "/?factionName=" + encoded;
+        String url = "https://lotuscraft.fun/faction/" + encoded;
 
         TextComponent link = new TextComponent(url);
         link.setColor(ChatColor.BLUE);
@@ -64,22 +62,9 @@ public class FactionStatsCommand extends AbstractCommand {
         return link;
     }
 
-    private String getServerIP() {
-        String host = getServer().getIp();
-
-        if (host.equals("0.0.0.0") || host.isEmpty()) {
-            try {
-                host = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                host = "127.0.0.1";
-            }
-        }
-
-        return host;
-    }
-
     @Override
     public List<String> complete(CommandSender sender, String[] args) {
         return List.of();
     }
+
 }

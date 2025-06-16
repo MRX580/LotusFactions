@@ -52,7 +52,7 @@ public class FactionPlaceholder extends PlaceholderExpansion {
             switch (identifier) {
                 case "prefix":
                     return ChatColor.of(faction.getColorHex())
-                            + faction.getName()
+                            + faction.getName() + " "
                             + ChatColor.RESET;
 
                 default:

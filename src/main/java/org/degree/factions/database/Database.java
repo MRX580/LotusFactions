@@ -56,6 +56,13 @@ public class Database {
                         "logout_time TIMESTAMP" +
                         ");");
 
+                stmt.execute("CREATE TABLE IF NOT EXISTS faction_kill_stats (" +
+                        "player_uuid TEXT NOT NULL," +
+                        "faction_name TEXT NOT NULL," +
+                        "kills INTEGER NOT NULL DEFAULT 0," +
+                        "PRIMARY KEY (player_uuid)" +
+                        ");");
+
                 stmt.execute("CREATE TABLE IF NOT EXISTS faction_block_stats (" +
                         "player_uuid  TEXT NOT NULL," +
                         "faction_name TEXT NOT NULL," +

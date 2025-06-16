@@ -18,19 +18,16 @@ public class BlockStatCache {
                 .broken++;
     }
 
-    // Выгрузка и очистка кэша для сохранения в БД
     public static Map<String, Map<String, BlockStat>> getAndClearStats() {
         Map<String, Map<String, BlockStat>> copy = new HashMap<>(stats);
         stats.clear();
         return copy;
     }
 
-    // Если захочешь выгрузить только для одного игрока (например, при выходе)
     public static Map<String, BlockStat> getAndClearStats(String uuid) {
         return stats.remove(uuid);
     }
 
-    // Статистика по одному типу блока
     public static class BlockStat {
         public String factionName;
         public int placed = 0;
